@@ -53,17 +53,20 @@ class Client
 
         if ($options['mode'] !== null) {
             $this->mode = $options['mode'];
+            unset($options['mode']);
         }
 
         if ($options['recordLocation'] !== null) {
             $this->recordLocation = $options['recordLocation'];
+            unset($options['recordLocation']);
         }
 
         if ($options['recordFileName'] !== null) {
             $this->recordFileName = $options['recordFileName'];
+            unset($options['recordFileName']);
         }
 
-        $this->setupClient();
+        $this->setupClient($options);
         $this->registerShutdown();
     }
 
@@ -140,15 +143,16 @@ class Client
     /**
      * Get the client for making calls
      *
+     * @param array $options
      * @return Client
      */
-    protected function setupClient()
+    protected function setupClient($options = [])
     {
         if ($this->mode === self::PLAYBACK) {
             $this->callList = $this->arrayToResponses($this->getRecordings());
         }
 
-        $this->client = new GuzzleClient();
+        $this->client = new GuzzleClient($options);
     }
 
     protected function getRecordFilePath()
