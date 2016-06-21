@@ -157,7 +157,7 @@ class Client
 
     protected function getRecordFilePath()
     {
-        $path = $this->recordLocation . $this->recordFileName;
+        $path = $this->recordLocation . DIRECTORY_SEPARATOR . $this->recordFileName;
         $path = str_replace("\\", DIRECTORY_SEPARATOR, $path);
 
         return $path;
