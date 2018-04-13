@@ -2,10 +2,12 @@
 
 namespace garethp\HttpPlayback;
 
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Client as GuzzleClient;
 
 /**
  * @method ResponseInterface get($uri, array $options = [])
@@ -21,7 +23,7 @@ use GuzzleHttp\Client as GuzzleClient;
  * @method ResponseInterface patchAsync($uri, array $options = [])
  * @method ResponseInterface deleteAsync($uri, array $options = [])
  */
-class Client
+class Client implements ClientInterface
 {
     const LIVE = 'live';
 
@@ -38,6 +40,8 @@ class Client
     protected $recordFileName = 'saveState.json';
 
     private $shutdownRegistered = false;
+
+    private $options;
 
     /**
      * @var GuzzleClient
@@ -66,6 +70,7 @@ class Client
             unset($options['recordFileName']);
         }
 
+        $this->options = $options;
         $this->setupClient($options);
         $this->registerShutdown();
     }
@@ -83,6 +88,17 @@ class Client
             ? $this->requestAsync(substr($method, 0, -5), $uri, $opts)
             : $this->request($method, $uri, $opts);
     }
+
+    public function send(RequestInterface $request, array $options = [])
+    {
+        return $this->doSend($request, $options);
+    }
+
+    public function sendAsync(RequestInterface $request, array $options = [])
+    {
+        return $this->doSend($request, $options, true);
+    }
+
 
     /**
      * @param $method
@@ -108,14 +124,56 @@ class Client
         return $this->doRequest($method, $uri, $options, true);
     }
 
+    public function getConfig($option = null)
+    {
+        $options = $this->client->getConfig();
+        $options = array_merge($options, $this->options);
+
+        return $option === null
+            ? $options
+            : (isset($options[$option]) ? $options[$option] : null);
+    }
+
+    protected function sendWrapper(RequestInterface $request, array $options, $async = false)
+    {
+        try {
+            if ($async) {
+                return $this->client->sendAsync($request, $options);
+            }
+
+            return $this->client->send($request, $options);
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
+
+    protected function doSend(RequestInterface $request, array $options, $async = false)
+    {
+        if ($this->mode === self::PLAYBACK) {
+            $response = array_shift($this->callList);
+        } else {
+            $response = $this->sendWrapper($request, $options, $async);
+        }
+
+        if ($this->mode === self::RECORD) {
+            $this->callList[] = $response;
+        }
+
+        if ($response instanceof \Exception) {
+            throw $response;
+        }
+
+        return $response;
+    }
+
     protected function requestWrapper($method, $uri = null, array $options = [], $async = false)
     {
         try {
             if ($async) {
                 return $this->client->requestAsync($method, $uri, $options);
-            } else {
-                return $this->client->request($method, $uri, $options);
             }
+
+            return $this->client->request($method, $uri, $options);
         } catch (\Exception $e) {
             return $e;
         }
@@ -166,9 +224,7 @@ class Client
     protected function getRecordings()
     {
         $saveLocation = $this->getRecordFilePath();
-        $records = json_decode(file_get_contents($saveLocation), true);
-
-        return $records;
+        return json_decode(file_get_contents($saveLocation), true);
     }
 
     public function endRecord()
