@@ -37,6 +37,10 @@ class Client
 
     protected $recordFileName = 'saveState.json';
 
+    private $booted = false;
+
+    private $options = [];
+
     private $shutdownRegistered = false;
 
     /**
@@ -66,7 +70,7 @@ class Client
             unset($options['recordFileName']);
         }
 
-        $this->setupClient($options);
+        $this->options = $options;
         $this->registerShutdown();
     }
 
@@ -123,6 +127,10 @@ class Client
 
     protected function doRequest($method, $uri = null, array $options = [], $async = false)
     {
+        if (!$this->booted) {
+            $this->setupClient($this->options);
+        }
+
         if ($this->mode === self::PLAYBACK) {
             $response = array_shift($this->callList);
         } else {
@@ -153,6 +161,8 @@ class Client
         }
 
         $this->client = new GuzzleClient($options);
+
+        $this->booted = true;
     }
 
     protected function getRecordFilePath()
