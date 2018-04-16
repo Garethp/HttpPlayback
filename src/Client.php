@@ -66,7 +66,8 @@ class Client
             unset($options['recordFileName']);
         }
 
-        $this->setupClient($options);
+        $this->setUpCallList();
+        $this->client = new GuzzleClient($options);
         $this->registerShutdown();
     }
 
@@ -140,19 +141,13 @@ class Client
         return $response;
     }
 
-    /**
-     * Get the client for making calls
-     *
-     * @param array $options
-     * @return Client
-     */
-    protected function setupClient($options = [])
+    protected function setUpCallList()
     {
-        if ($this->mode === self::PLAYBACK) {
-            $this->callList = $this->arrayToResponses($this->getRecordings());
+        if ($this->mode !== self::PLAYBACK) {
+            return;
         }
 
-        $this->client = new GuzzleClient($options);
+        $this->callList = $this->arrayToResponses($this->getRecordings());
     }
 
     protected function getRecordFilePath()
@@ -171,6 +166,19 @@ class Client
         return $records;
     }
 
+    public function changeRecordLocationAndFile($recordLocation, $recordFileName)
+    {
+        if ($this->mode == self::RECORD) {
+            $this->endRecord();
+            $this->mode = self::RECORD;
+        }
+
+        $this->recordLocation = $recordLocation;
+        $this->recordFileName = $recordFileName;
+
+        $this->setUpCallList();
+    }
+
     public function endRecord()
     {
         if ($this->mode != self::RECORD) {
@@ -187,6 +195,7 @@ class Client
         }
 
         file_put_contents($saveLocation, json_encode($saveList));
+        $this->callList = [];
     }
 
     protected function registerShutdown()
