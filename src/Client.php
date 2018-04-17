@@ -70,8 +70,9 @@ class Client implements ClientInterface
             unset($options['recordFileName']);
         }
 
+        $this->setUpCallList();
+        $this->client = new GuzzleClient($options);
         $this->options = $options;
-        $this->setupClient($options);
         $this->registerShutdown();
     }
 
@@ -198,19 +199,13 @@ class Client implements ClientInterface
         return $response;
     }
 
-    /**
-     * Get the client for making calls
-     *
-     * @param array $options
-     * @return Client
-     */
-    protected function setupClient($options = [])
+    protected function setUpCallList()
     {
-        if ($this->mode === self::PLAYBACK) {
-            $this->callList = $this->arrayToResponses($this->getRecordings());
+        if ($this->mode !== self::PLAYBACK) {
+            return;
         }
 
-        $this->client = new GuzzleClient($options);
+        $this->callList = $this->arrayToResponses($this->getRecordings());
     }
 
     protected function getRecordFilePath()
@@ -225,6 +220,19 @@ class Client implements ClientInterface
     {
         $saveLocation = $this->getRecordFilePath();
         return json_decode(file_get_contents($saveLocation), true);
+    }
+
+    public function changeRecordLocationAndFile($recordLocation, $recordFileName)
+    {
+        if ($this->mode == self::RECORD) {
+            $this->endRecord();
+            $this->mode = self::RECORD;
+        }
+
+        $this->recordLocation = $recordLocation;
+        $this->recordFileName = $recordFileName;
+
+        $this->setUpCallList();
     }
 
     public function endRecord()
@@ -243,6 +251,7 @@ class Client implements ClientInterface
         }
 
         file_put_contents($saveLocation, json_encode($saveList));
+        $this->callList = [];
     }
 
     protected function registerShutdown()

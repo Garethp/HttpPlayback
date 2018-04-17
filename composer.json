@@ -4,8 +4,8 @@
     "guzzlehttp/guzzle": "~6.0"
   },
   "scripts": {
-    "cs": "./vendor/bin/phpcs --standard=ruleset.xml -np src/ tests/ examples/",
-    "cbf": "./vendor/bin/phpcbf --standard=ruleset.xml -np src/ tests/ examples/"
+    "cs": "./vendor/bin/phpcs --standard=PSR2 -np src/",
+    "cbf": "./vendor/bin/phpcbf --standard=PSR2 -np src/"
   },
   "autoload": {
     "psr-4": {
