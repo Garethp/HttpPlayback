@@ -4,6 +4,7 @@ namespace garethp\HttpPlayback;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -282,6 +283,11 @@ class Client implements ClientInterface
                         'uri' => $response->getRequest()->getUri()->__toString(),
                         'headers' => $response->getRequest()->getHeaders(),
                         'body' => $response->getRequest()->getBody()->__toString()
+                    ],
+                    'response' => [
+                        'statusCode' => $response->getResponse() ? $response->getResponse()->getStatusCode() : 500,
+                        'headers' => $response->getResponse() ? $response->getResponse()->getHeaders() : [],
+                        'body' => $response->getResponse() ? $response->getResponse()->getBody()->__toString() : ''
                     ]
                 ];
             } else {
@@ -316,7 +322,17 @@ class Client implements ClientInterface
                     $item['request']['headers'],
                     $item['request']['body']
                 );
-                $mockedResponses[] = new $errorClass($item['errorMessage'], $request);
+                $response = new Response(
+                    $item['response']['statusCode'],
+                    $item['response']['headers'],
+                    $item['response']['body']
+                );
+
+                if (is_a($errorClass, BadResponseException::class, true)) {
+                    $mockedResponses[] = new $errorClass($item['errorMessage'], $request, $response);
+                } else {
+                    $mockedResponses[] = new $errorClass($item['errorMessage'], $request);
+                }
             }
         }
 
