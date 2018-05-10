@@ -285,9 +285,9 @@ class Client implements ClientInterface
                         'body' => $response->getRequest()->getBody()->__toString()
                     ],
                     'response' => [
-                        'statusCode' => $response->getResponse() ? $response->getResponse()->getStatusCode() : 500,
-                        'headers' => $response->getResponse() ? $response->getResponse()->getHeaders() : [],
-                        'body' => $response->getResponse() ? $response->getResponse()->getBody()->__toString() : ''
+                        'statusCode' => $response->hasResponse() ? $response->getResponse()->getStatusCode() : 500,
+                        'headers' => $response->hasResponse() ? $response->getResponse()->getHeaders() : [],
+                        'body' => $response->hasResponse() ? $response->getResponse()->getBody()->__toString() : ''
                     ]
                 ];
             } else {
@@ -328,7 +328,11 @@ class Client implements ClientInterface
                     $item['response']['body']
                 );
 
-                if (is_a($errorClass, BadResponseException::class, true)) {
+                if (
+                    is_a($errorClass, BadResponseException::class, true)
+                    ||
+                    is_subclass_of($errorClass, BadResponseException::class, true)
+                ) {
                     $mockedResponses[] = new $errorClass($item['errorMessage'], $request, $response);
                 } else {
                     $mockedResponses[] = new $errorClass($item['errorMessage'], $request);
