@@ -2,7 +2,7 @@
   "name": "garethp/http-playback",
   "license": "MIT",
   "require": {
-    "guzzlehttp/guzzle": "~6.0"
+    "guzzlehttp/guzzle": "~7.0"
   },
   "scripts": {
     "cs": "./vendor/bin/phpcs --standard=PSR2 -np src/",
