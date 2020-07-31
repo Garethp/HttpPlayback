@@ -5,6 +5,7 @@ namespace garethp\HttpPlayback;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -91,12 +92,12 @@ class Client implements ClientInterface
             : $this->request($method, $uri, $opts);
     }
 
-    public function send(RequestInterface $request, array $options = [])
+    public function send(RequestInterface $request, array $options = []): ResponseInterface
     {
         return $this->doSend($request, $options);
     }
 
-    public function sendAsync(RequestInterface $request, array $options = [])
+    public function sendAsync(RequestInterface $request, array $options = []): PromiseInterface
     {
         return $this->doSend($request, $options, true);
     }
@@ -109,7 +110,7 @@ class Client implements ClientInterface
      *
      * @return ResponseInterface
      */
-    public function request($method, $uri = null, array $options = [])
+    public function request($method, $uri = null, array $options = []): ResponseInterface
     {
         return $this->doRequest($method, $uri, $options);
     }
@@ -121,12 +122,12 @@ class Client implements ClientInterface
      *
      * @return ResponseInterface
      */
-    public function requestAsync($method, $uri = null, array $options = [])
+    public function requestAsync($method, $uri = null, array $options = []): PromiseInterface
     {
         return $this->doRequest($method, $uri, $options, true);
     }
 
-    public function getConfig($option = null)
+    public function getConfig(?string $option = null)
     {
         $options = $this->client->getConfig();
         $options = array_merge($options, $this->options);
