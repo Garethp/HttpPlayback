@@ -1,5 +1,6 @@
 {
   "name": "garethp/http-playback",
+  "license": "MIT",
   "require": {
     "guzzlehttp/guzzle": "~6.0"
   },
