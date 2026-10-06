@@ -173,10 +173,10 @@ class Client implements ClientInterface
     {
         try {
             if ($async) {
-                return $this->client->requestAsync($method, $uri, $options);
+                return $this->client->requestAsync(\strtoupper($method), $uri, $options);
             }
 
-            return $this->client->request($method, $uri, $options);
+            return $this->client->request(\strtoupper($method), $uri, $options);
         } catch (\Exception $e) {
             return $e;
         }
